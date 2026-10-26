@@ -1,0 +1,69 @@
+﻿<EditForm Model="Model" OnValidSubmit="GuardarClick" FormName="@FormName">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="row">
+        <div class="col-12 col-md-6 mb-3">
+            <label class="form-label" for="nombre">Nombre</label>
+            <InputText id="nombre" @bind-Value="Model.Nombre" class="form-control" />
+            <ValidationMessage For="() => Model.Nombre" class="text-danger" />
+        </div>
+
+        <div class="col-12 col-md-6 mb-3">
+            <label class="form-label" for="marca">Marca</label>
+            <InputText id="marca" @bind-Value="Model.Marca" class="form-control" />
+            <ValidationMessage For="() => Model.Marca" class="text-danger" />
+        </div>
+
+        <div class="col-12 col-md-4 mb-3">
+            <label class="form-label" for="categoria">Categoría</label>
+            <InputSelect id="categoria" @bind-Value="Model.CategoriaId" class="form-select">
+                <option value="0">-- Seleccionar --</option>
+                @foreach (var c in Categorias)
+                {
+                    <option value="@c.Id">@c.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Model.CategoriaId" class="text-danger" />
+        </div>
+
+        <div class="col-6 col-md-4 mb-3">
+            <label class="form-label" for="precio">Precio ($)</label>
+            <InputNumber id="precio" @bind-Value="Model.Precio" class="form-control" />
+            <ValidationMessage For="() => Model.Precio" class="text-danger" />
+        </div>
+
+        <div class="col-6 col-md-4 mb-3">
+            <label class="form-label" for="stock">Stock</label>
+            <InputNumber id="stock" @bind-Value="Model.Stock" class="form-control" />
+            <ValidationMessage For="() => Model.Stock" class="text-danger" />
+        </div>
+
+        <div class="col-12 mb-3">
+            <label class="form-label" for="descripcion">Descripción</label>
+            <InputTextArea id="descripcion" @bind-Value="Model.Descripcion" class="form-control" rows="3" />
+            <small class="text-muted">@(Model.Descripcion?.Length ?? 0)/300 caracteres</small>
+            <ValidationMessage For="() => Model.Descripcion" class="text-danger" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success" disabled="@Guardando">
+        @if (Guardando)
+        {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        }
+        @TextoBoton
+    </button>
+    <a href="admin/productos" class="btn btn-outline-secondary ms-2">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] public ProductoEntity Model { get; set; } = default!;
+    [Parameter] public List<Categoria> Categorias { get; set; } = new();
+    [Parameter] public EventCallback OnGuardar { get; set; }
+    [Parameter] public string TextoBoton { get; set; } = "Guardar";
+    [Parameter] public string FormName { get; set; } = "producto-form";
+    [Parameter] public bool Guardando { get; set; }
+
+    private Task GuardarClick() => OnGuardar.InvokeAsync();
+}

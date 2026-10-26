@@ -1,0 +1,18 @@
+.modal-content {
+    border: 0;
+    border-radius: var(--radio-borde);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+    animation: aparecer .2s ease-out;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

@@ -1,0 +1,9 @@
+.card {
+    border: 0;
+    border-radius: var(--radio-borde);
+    background: var(--color-superficie);
+}
+
+h1 {
+    color: var(--color-primario);
+}

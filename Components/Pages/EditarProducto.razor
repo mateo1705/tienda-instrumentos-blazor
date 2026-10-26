@@ -1,0 +1,83 @@
+﻿@page "/admin/editar-producto/{Id:int}"
+@inject IProductoService ProductoService
+@inject NavigationManager Nav
+
+<PageTitle>Editar producto</PageTitle>
+
+<h1 class="h3 mb-3">Editar producto</h1>
+
+@if (mensajeError is not null)
+{
+    <AlertError Mensaje="@mensajeError" OnCerrar="() => mensajeError = null" />
+}
+
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+}
+else if (producto is null)
+{
+    <div class="alert alert-warning">
+        No se encontró el producto #@Id. <a href="admin/productos">Volver al listado</a>
+    </div>
+}
+else
+{
+    <ProductoForm Model="producto"
+                  Categorias="categorias"
+                  Guardando="guardando"
+                  OnGuardar="Guardar"
+                  TextoBoton="Guardar cambios"
+                  FormName="editar-producto" />
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ProductoEntity? producto;
+    private List<Categoria> categorias = new();
+    private bool isLoading = true;
+    private bool guardando;
+    private string? mensajeError;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        mensajeError = null;
+        try
+        {
+            categorias = await ProductoService.ObtenerCategorias();
+            // La lectura es AsNoTracking: es una copia, cancelar no cambia nada en la base.
+            producto = await ProductoService.ObtenerPorId(Id);
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo cargar el producto.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        mensajeError = null;
+        try
+        {
+            await ProductoService.Actualizar(producto!);
+            Nav.NavigateTo("/admin/productos");
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudieron guardar los cambios. Intentá de nuevo.";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+}

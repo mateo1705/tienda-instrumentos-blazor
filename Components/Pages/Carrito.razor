@@ -1,0 +1,76 @@
+﻿@page "/carrito"
+@implements IDisposable
+@inject CarritoState Carro
+
+<PageTitle>Carrito</PageTitle>
+
+<h3>Tu carrito</h3>
+
+@if (!Carro.Items.Any())
+{
+    <div class="alert alert-info">
+        El carrito está vacío. <a href="catalogo">Ir al catálogo</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Carro.Items)
+                {
+                    <tr>
+                        <td>@item.Producto.Nombre</td>
+                        <td>$@item.Producto.Precio.ToString("N0")</td>
+                        <td>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    @onclick="() => Carro.Disminuir(item.Producto.Id)">
+                                −
+                            </button>
+                            <span class="mx-2">@item.Cantidad</span>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    @onclick="() => Carro.Agregar(item.Producto)">
+                                +
+                            </button>
+                        </td>
+                        <td>$@item.Subtotal.ToString("N0")</td>
+                        <td>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    @onclick="() => Carro.Quitar(item.Producto.Id)">
+                                Quitar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" class="text-end">Total</th>
+                    <th colspan="2">$@Carro.Total.ToString("N0")</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <button class="btn btn-outline-danger" @onclick="Carro.Vaciar">Vaciar carrito</button>
+}
+
+@code {
+    protected override void OnInitialized()
+        => Carro.OnChange += AlCambiarCarrito;
+
+    private void AlCambiarCarrito()
+        => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+        => Carro.OnChange -= AlCambiarCarrito;
+}

@@ -1,0 +1,83 @@
+@page "/"
+@using Microsoft.AspNetCore.Components
+
+<PageTitle>Inicio | Tienda de Instrumentos</PageTitle>
+
+<div class="home-page">
+    <section class="hero-section">
+        <div class="hero-copy">
+            <span class="eyebrow"><span class="eyebrow-line"></span> TU MÚSICA EMPIEZA ACÁ</span>
+            <h1>Encontrá el sonido<br />que te <span>define.</span></h1>
+            <p class="hero-description">
+                Instrumentos, equipos y accesorios para acompañar cada idea,
+                cada ensayo y cada escenario.
+            </p>
+            <div class="hero-actions">
+                <a class="gold-button" href="/catalogo">Explorar catálogo <span aria-hidden="true">→</span></a>
+                <a class="text-link" href="#categorias">Descubrir instrumentos</a>
+            </div>
+            <div class="hero-note">
+                <span class="note-icon" aria-hidden="true">♫</span>
+                <span>Tu próximo capítulo musical empieza hoy.</span>
+            </div>
+        </div>
+        <div class="hero-art" role="img" aria-label="Guitarra eléctrica iluminada en un estudio musical">
+            <div class="hero-art-overlay"></div>
+            <div class="hero-badge"><span>SONIDO</span><strong>con identidad</strong></div>
+        </div>
+        <div class="hero-index" aria-hidden="true">01 <span>/ 03</span></div>
+    </section>
+
+    <section class="benefits-row" aria-label="Beneficios de la tienda">
+        <div class="benefit">
+            <span class="benefit-icon" aria-hidden="true">♬</span>
+            <div><strong>Para cada músico</strong><span>Desde tus primeros acordes</span></div>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon" aria-hidden="true">◇</span>
+            <div><strong>Calidad y confianza</strong><span>Equipamiento para inspirarte</span></div>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon" aria-hidden="true">↗</span>
+            <div><strong>Tu sonido, tu estilo</strong><span>Encontrá lo que va con vos</span></div>
+        </div>
+    </section>
+
+    <section class="categories-section" id="categorias">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">EXPLORÁ LA TIENDA</span>
+                <h2>Todo empieza con <span>un instrumento.</span></h2>
+            </div>
+            <a class="text-link category-link" href="/catalogo">Ver todo el catálogo <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="category-grid">
+            <a class="category-card guitars" href="/catalogo">
+                <span class="category-number">01</span>
+                <div class="category-card-copy"><h3>Guitarras</h3><span>Encontrá tu voz <b>↗</b></span></div>
+            </a>
+            <a class="category-card keys" href="/catalogo">
+                <span class="category-number">02</span>
+                <div class="category-card-copy"><h3>Teclados</h3><span>Creá nuevas melodías <b>↗</b></span></div>
+            </a>
+            <a class="category-card drums" href="/catalogo">
+                <span class="category-number">03</span>
+                <div class="category-card-copy"><h3>Baterías</h3><span>Marcá el ritmo <b>↗</b></span></div>
+            </a>
+            <a class="category-card sound" href="/catalogo">
+                <span class="category-number">04</span>
+                <div class="category-card-copy"><h3>Audio y accesorios</h3><span>Completá tu equipo <b>↗</b></span></div>
+            </a>
+        </div>
+    </section>
+
+    <section class="closing-banner">
+        <div>
+            <span class="eyebrow">EL PRÓXIMO SONIDO ES TUYO</span>
+            <h2>¿Listo para hacer música?</h2>
+            <p>Explorá nuestro catálogo y encontrá el equipo ideal para vos.</p>
+        </div>
+        <a class="gold-button" href="/catalogo">Ir al catálogo <span aria-hidden="true">→</span></a>
+    </section>
+</div>

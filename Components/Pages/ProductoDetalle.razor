@@ -1,0 +1,83 @@
+﻿@page "/producto/{Id:int}"
+@inject IProductoService ProductoService
+@inject CarritoState Carrito
+
+<PageTitle>@(producto?.Nombre ?? "Producto")</PageTitle>
+
+@if (mensajeError is not null)
+{
+    <AlertError Mensaje="@mensajeError" OnCerrar="() => mensajeError = null" />
+}
+else if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+}
+else if (producto is null)
+{
+    <div class="alert alert-warning">
+        No se encontró el producto #@Id. <a href="catalogo">Volver al catálogo</a>
+    </div>
+}
+else
+{
+    <article class="card shadow-sm">
+        <div class="card-body">
+            <p class="text-muted small mb-1">@producto.Categoria?.Nombre · @producto.Marca</p>
+            <h1 class="h3">@producto.Nombre</h1>
+            <p>@producto.Descripcion</p>
+            <p class="fs-4 fw-bold">$@producto.Precio.ToString("N0")</p>
+
+            <span class="badge @(producto.Stock > 0 ? "bg-success" : "bg-danger")">
+                @(producto.Stock > 0 ? $"Stock: {producto.Stock}" : "Sin stock")
+            </span>
+
+            @if (!string.IsNullOrEmpty(mensaje))
+            {
+                <div class="alert alert-info mt-3" role="status" aria-live="polite">@mensaje</div>
+            }
+
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-primary" disabled="@(producto.Stock == 0)" @onclick="Agregar">
+                    <i class="bi bi-cart-plus" aria-hidden="true"></i> Agregar al carrito
+                </button>
+                <a href="catalogo" class="btn btn-outline-secondary">Volver</a>
+            </div>
+        </div>
+    </article>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ProductoEntity? producto;
+    private bool isLoading = true;
+    private string? mensaje;
+    private string? mensajeError;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        mensajeError = null;
+        try
+        {
+            producto = await ProductoService.ObtenerPorId(Id);
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo cargar el producto.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Agregar()
+    {
+        mensaje = Carrito.Agregar(producto!)
+            ? "Producto agregado al carrito."
+            : "No hay más stock disponible.";
+    }
+}

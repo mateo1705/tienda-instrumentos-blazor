@@ -1,0 +1,10 @@
+﻿<div class="alert alert-danger alert-dismissible" role="alert">
+    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> @Mensaje
+    <button type="button" class="btn-close" aria-label="Cerrar"
+            @onclick="() => OnCerrar.InvokeAsync()"></button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Mensaje { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnCerrar { get; set; }
+}

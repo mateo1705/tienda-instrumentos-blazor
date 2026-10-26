@@ -1,0 +1,63 @@
+﻿
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject IProductoService ProductoService
+
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="page">
+    <aside class="sidebar">
+        <NavMenu />
+    </aside>
+
+    <main>
+        <header class="top-row auth px-4 d-flex justify-content-between align-items-center">
+            <ul class="estadisticas list-unstyled d-none d-md-flex flex-wrap gap-3 mb-0" aria-label="Estadísticas del inventario">
+                <li><span class="bi bi-music-note-list" aria-hidden="true"></span> Productos: <strong>@stats.TotalProductos</strong></li>
+                <li><span class="bi bi-exclamation-circle" aria-hidden="true"></span> Sin stock: <strong>@stats.SinStock</strong></li>
+                <li><span class="bi bi-cash-stack" aria-hidden="true"></span> Inventario: <strong>$@stats.ValorInventario.ToString("N0")</strong></li>
+            </ul>
+            <ToggleTema />
+        </header>
+
+        <article id="contenido" class="content px-4" tabindex="-1">
+            @Body
+        </article>
+
+        <footer class="px-4 py-3 border-top text-muted small">
+            <p class="mb-0">Tienda de Instrumentos &copy; @DateTime.Now.Year</p>
+        </footer>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ocurrió un error inesperado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private EstadisticasInventario stats = new(0, 0, 0m);
+
+    protected override async Task OnInitializedAsync()
+    {
+        ProductoService.OnChange += AlCambiar;
+        await CargarEstadisticas();
+    }
+
+    private async Task CargarEstadisticas()
+    {
+        try { stats = await ProductoService.ObtenerEstadisticas(); }
+        catch { /* el encabezado nunca debe romper la app */ }
+    }
+
+    private void AlCambiar()
+        => _ = InvokeAsync(async () =>
+        {
+            await CargarEstadisticas();
+            StateHasChanged();
+        });
+
+    public void Dispose()
+        => ProductoService.OnChange -= AlCambiar;
+}

@@ -1,0 +1,208 @@
+﻿@page "/catalogo"
+@implements IAsyncDisposable
+@inject CarritoState Carrito
+@inject IProductoService ProductoService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>Catálogo</PageTitle>
+
+<section aria-labelledby="titulo-catalogo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 id="titulo-catalogo" class="h3 mb-0">Catálogo de instrumentos</h1>
+        <button type="button" class="btn btn-outline-warning btn-sm" @onclick="AvisarStockBajo">
+            <i class="bi bi-bell" aria-hidden="true"></i> Avisar stock bajo
+        </button>
+    </div>
+
+    <form class="row g-2 mb-3" role="search" @onsubmit="BuscarAsync">
+        <div class="col-12 col-md-6">
+            <label for="busqueda" class="visually-hidden">Buscar por nombre o marca</label>
+            <input id="busqueda" class="form-control" placeholder="Buscar por nombre o marca"
+                   @bind="busqueda" @bind:event="oninput" />
+        </div>
+        <div class="col-8 col-md-4">
+            <label for="categoria" class="visually-hidden">Categoría</label>
+            <select id="categoria" class="form-select" @onchange="CambiarCategoria">
+                <option value="0">Todas las categorías</option>
+                @foreach (var c in categorias)
+                {
+                    <option value="@c.Id" selected="@(categoriaId == c.Id)">@c.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="col-4 col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success" role="status" aria-live="polite">@mensaje</div>
+    }
+
+    @if (mensajeError is not null)
+    {
+        <AlertError Mensaje="@mensajeError" OnCerrar="CerrarError" />
+    }
+
+    @if (isLoading)
+    {
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    }
+    else if (resultado.Items.Count == 0 && mensajeError is null)
+    {
+        <p class="text-muted">No se encontraron productos con esos criterios.</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var p in resultado.Items)
+            {
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <ProductoCard Producto="p"
+                                  OnAgregar="AgregarAlCarrito"
+                                  OnCopiarEnlace="CopiarEnlace" />
+                </div>
+            }
+        </div>
+
+        <Paginacion PaginaActual="pagina"
+                    TotalPaginas="resultado.TotalPaginas"
+                    OnCambio="CambiarPagina" />
+    }
+</section>
+
+@code {
+    private const int TamanioPagina = 6;
+    private const int UmbralStockBajo = 2;
+
+    private PagedResult<ProductoEntity> resultado = new();
+    private List<Categoria> categorias = new();
+    private string busqueda = string.Empty;
+    private int? categoriaId;
+    private int pagina = 1;
+    private bool isLoading = true;
+    private string? mensaje;
+    private string? mensajeError;
+    private IJSObjectReference? _modulo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categorias = await ProductoService.ObtenerCategorias();
+        }
+        catch
+        {
+            // si falla, el error se muestra al cargar los productos
+        }
+
+        await CargarAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            _modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/tienda.js");
+    }
+
+    private async Task CargarAsync()
+    {
+        isLoading = true;
+        mensajeError = null;
+        try
+        {
+            resultado = await ProductoService.ObtenerPaginado(
+                pagina, TamanioPagina, busqueda, categoriaId);
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudieron cargar los productos. Intentá de nuevo en unos minutos.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task BuscarAsync()
+    {
+        pagina = 1;
+        await CargarAsync();
+    }
+
+    private async Task CambiarCategoria(ChangeEventArgs e)
+    {
+        categoriaId = int.TryParse(e.Value?.ToString(), out var id) && id > 0 ? id : null;
+        pagina = 1;
+        await CargarAsync();
+    }
+
+    private async Task CambiarPagina(int nueva)
+    {
+        pagina = nueva;
+        await CargarAsync();
+    }
+
+    private void CerrarError() => mensajeError = null;
+
+    private void AgregarAlCarrito(ProductoEntity p)
+    {
+        mensaje = Carrito.Agregar(p)
+            ? $"Agregaste \"{p.Nombre}\" al carrito."
+            : $"No hay más stock disponible de \"{p.Nombre}\".";
+    }
+
+    private async Task CopiarEnlace(ProductoEntity p)
+    {
+        if (_modulo is null) return;
+
+        var url = Nav.ToAbsoluteUri($"/producto/{p.Id}").ToString();
+        try
+        {
+            await _modulo.InvokeVoidAsync("copiarAlPortapapeles", url);
+            mensaje = $"Enlace de \"{p.Nombre}\" copiado al portapapeles.";
+        }
+        catch (JSException)
+        {
+            mensaje = "No se pudo copiar el enlace: el navegador bloqueó el portapapeles.";
+        }
+    }
+
+    private async Task AvisarStockBajo()
+    {
+        if (_modulo is null) return;
+
+        try
+        {
+            var bajos = await ProductoService.ObtenerStockBajo(UmbralStockBajo);
+
+            if (bajos.Count == 0)
+            {
+                mensaje = "No hay productos con stock bajo.";
+                return;
+            }
+
+            var texto = string.Join(", ", bajos.Select(p => $"{p.Nombre} ({p.Stock})"));
+            var permiso = await _modulo.InvokeAsync<string>("mostrarNotificacion", "Stock bajo", texto);
+
+            mensaje = permiso == "granted"
+                ? $"Aviso enviado: {bajos.Count} producto(s) con stock bajo."
+                : "No se pudo mostrar la notificación: permiso denegado o no soportado por el navegador.";
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo consultar el stock.";
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_modulo is null) return;
+        try { await _modulo.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}

@@ -1,0 +1,71 @@
+﻿@page "/admin/nuevo-producto"
+@inject IProductoService ProductoService
+@inject NavigationManager Nav
+
+<PageTitle>Nuevo producto</PageTitle>
+
+<h1 class="h3 mb-3">Nuevo producto</h1>
+
+@if (mensajeError is not null)
+{
+    <AlertError Mensaje="@mensajeError" OnCerrar="() => mensajeError = null" />
+}
+
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+}
+else
+{
+    <ProductoForm Model="nuevo"
+                  Categorias="categorias"
+                  Guardando="guardando"
+                  OnGuardar="Guardar"
+                  TextoBoton="Crear producto"
+                  FormName="nuevo-producto" />
+}
+
+@code {
+    private ProductoEntity nuevo = new();
+    private List<Categoria> categorias = new();
+    private bool isLoading = true;
+    private bool guardando;
+    private string? mensajeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categorias = await ProductoService.ObtenerCategorias();
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudieron cargar las categorías.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        mensajeError = null;
+        try
+        {
+            await ProductoService.Crear(nuevo);
+            Nav.NavigateTo("/admin/productos");
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo guardar el producto. Revisá los datos e intentá de nuevo.";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+    }

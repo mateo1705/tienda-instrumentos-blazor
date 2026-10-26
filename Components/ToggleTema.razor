@@ -1,0 +1,41 @@
+﻿@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<button type="button"
+        class="btn btn-outline-secondary btn-sm"
+        role="switch"
+        aria-checked="@(oscuro ? "true" : "false")"
+        aria-label="Modo oscuro"
+        @onclick="Alternar">
+    <i class="bi @(oscuro ? "bi-sun" : "bi-moon-stars")" aria-hidden="true"></i>
+    @(oscuro ? "Claro" : "Oscuro")
+</button>
+
+@code {
+    private IJSObjectReference? _modulo;
+    private bool oscuro;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/tienda.js");
+        oscuro = await _modulo.InvokeAsync<string>("obtenerTema") == "dark";
+        StateHasChanged();
+    }
+
+    private async Task Alternar()
+    {
+        if (_modulo is null) return;
+
+        oscuro = !oscuro;
+        await _modulo.InvokeVoidAsync("aplicarTema", oscuro ? "dark" : "light");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_modulo is null) return;
+        try { await _modulo.DisposeAsync(); }
+        catch (JSDisconnectedException) { /* el circuito ya se cerró */ }
+    }
+}

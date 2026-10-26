@@ -1,0 +1,75 @@
+﻿<article class="producto-card card h-100 @(Producto.Stock == 0 ? "sin-stock" : "")"
+         style="--color-categoria: @ColorCategoria(NombreCategoria)">
+   
+         <header class="card-header producto-header">
+        <span class="categoria"><i class="bi @IconoCategoria(NombreCategoria)" aria-hidden="true"></i> @NombreCategoria</span>
+    </header>
+
+    <div class="card-body d-flex flex-column">
+        <h2 class="h5 card-title">
+            <a href="producto/@Producto.Id" class="text-reset text-decoration-none stretched-link-titulo">@Producto.Nombre</a>
+        </h2>
+        <p class="marca">@Producto.Marca</p>
+        <p class="card-text">@Producto.Descripcion</p>
+
+        <div class="mt-auto">
+            <p class="precio mb-2">$@Producto.Precio.ToString("N0")</p>
+
+            <span class="badge @(Producto.Stock > 0 ? "bg-success" : "bg-danger")">
+                @(Producto.Stock > 0 ? $"Stock: {Producto.Stock}" : "Sin stock")
+            </span>
+
+            <div class="mt-3">
+                <button class="btn btn-primary btn-sm"
+                        disabled="@(Producto.Stock == 0)"
+                        aria-label="Agregar @Producto.Nombre al carrito"
+                        @onclick="AgregarClick">
+                    <i class="bi bi-cart-plus" aria-hidden="true"></i> Agregar al carrito
+                </button>
+           <div class="mt-3 d-flex flex-wrap gap-2">
+    <button class="btn btn-primary btn-sm"
+            disabled="@(Producto.Stock == 0)"
+            aria-label="Agregar @Producto.Nombre al carrito"
+            @onclick="AgregarClick">
+        <i class="bi bi-cart-plus" aria-hidden="true"></i> Agregar al carrito
+    </button>
+
+    <button class="btn btn-outline-secondary btn-sm"
+            aria-label="Copiar enlace de @Producto.Nombre"
+            @onclick="() => OnCopiarEnlace.InvokeAsync(Producto)">
+        <i class="bi bi-link-45deg" aria-hidden="true"></i> Copiar enlace
+    </button>
+</div>
+            
+            </div>
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ProductoEntity Producto { get; set; } = default!;
+    [Parameter] public EventCallback<ProductoEntity> OnAgregar { get; set; }
+    [Parameter] public EventCallback<ProductoEntity> OnCopiarEnlace { get; set; }
+    private async Task AgregarClick()
+        => await OnAgregar.InvokeAsync(Producto);
+    private string NombreCategoria => Producto.Categoria?.Nombre ?? "";
+    private static string ColorCategoria(string categoria) => categoria switch
+    {
+        "Guitarras" => "#b5651d",
+        "Teclados" => "#3a6ea5",
+        "Percusión" => "#a23b3b",
+        "Vientos" => "#4a8f6a",
+        "Accesorios" => "#7a4fa0",
+        _ => "#888888"
+    };
+
+    private static string IconoCategoria(string categoria) => categoria switch
+    {
+        "Accesorios" or "Cuerdas" => "bi-music-note-beamed",
+        "Teclados" => "bi-keyboard",
+        "Percusión" => "bi-disc",
+        "Vientos" => "bi-wind",
+        _ => "bi-tag"
+    };
+
+}
