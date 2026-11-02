@@ -1,0 +1,46 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  AZURE_WEBAPP_NAME: 'NOMBRE-DE-TU-APP'   # el mismo que pusiste en Azure
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      # Cuando tengas proyecto de pruebas, descomentá:
+      # - name: Test
+      #   run: dotnet test --no-build -c Release
+
+      - name: Publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: dotnet publish --no-build -c Release -o ./publish
+
+      - name: Deploy to Azure
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
