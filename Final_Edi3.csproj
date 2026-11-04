@@ -19,5 +19,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
   </ItemGroup>
-
+<ItemGroup>
+  <Compile Remove="publish\**" />
+  <Content Remove="publish\**" />
+  <EmbeddedResource Remove="publish\**" />
+  <None Remove="publish\**" />
+</ItemGroup>
 </Project>
